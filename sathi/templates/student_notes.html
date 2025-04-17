@@ -139,10 +139,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
 
 <script>
-  const url = "{% static 'pdfs/sample.pdf' %}";  // Your PDF URL
-  const canvas = document.getElementById('pdf-canvas');
-  let pdfDoc = null; // To hold the loaded PDF
-  
   // Load PDF
   const loadingTask = pdfjsLib.getDocument(url);
   loadingTask.promise.then(function(pdf) {
@@ -207,60 +203,93 @@
   </script>
   
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const synth = window.speechSynthesis;
-        let voices = [];
+  <iframe src="{{ MEDIA_URL }}notes/{{ note_filename }}" width="100%" height="600px"></iframe>
 
-        function loadVoices() {
-          voices = synth.getVoices();
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const canvas = document.getElementById("pdf-canvas");
+      const url = "{% static 'pdfs/sample.pdf' %}";
+      let pdfDoc = null;
+      const synth = window.speechSynthesis;
+      let voices = [];
+  
+      // Load Voices
+      function loadVoices() {
+        voices = synth.getVoices();
+      }
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+      }
+      loadVoices();
+  
+      function speak(text) {
+        if (!text) return;
+        synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "en-US";
+  
+        const femaleVoice = voices.find((voice) =>
+          ["Female", "Google US English", "Samantha", "Microsoft Zira"].some((v) =>
+            voice.name.includes(v)
+          )
+        );
+  
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
         }
-
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-          speechSynthesis.onvoiceschanged = loadVoices;
-        }
-
-        loadVoices();
-
-        function speak(text) {
-          if (!text) return;
-
-          synth.cancel(); // stop previous speech
-
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = "en-US";
-
-          const femaleVoice = voices.find(
-            (voice) =>
-              voice.name.includes("Female") ||
-              voice.name.includes("Google US English") ||
-              voice.name.includes("Samantha") ||
-              voice.name.includes("Microsoft Zira")
-          );
-
-          if (femaleVoice) {
-            utterance.voice = femaleVoice;
-          }
-
-          synth.speak(utterance);
-        }
-        const speakableElements = document.querySelectorAll(".speak-on-hover");
-
-        speakableElements.forEach((el) => {
-          el.addEventListener("mouseenter", () => {
-            const text =
-              el.dataset.speak?.trim() ||
-              el.innerText.trim() ||
-              el.getAttribute("aria-label") ||
-              el.getAttribute("title");
-            if (text) speak(text);
-          });
-
-          el.addEventListener("mouseleave", () => synth.cancel());
+  
+        synth.speak(utterance);
+      }
+  
+      // Speak on hover
+      const speakableElements = document.querySelectorAll(".speak-on-hover");
+      speakableElements.forEach((el) => {
+        el.addEventListener("mouseenter", () => {
+          const text =
+            el.dataset.speak?.trim() ||
+            el.innerText.trim() ||
+            el.getAttribute("aria-label") ||
+            el.getAttribute("title");
+          if (text) speak(text);
         });
+  
+        el.addEventListener("mouseleave", () => synth.cancel());
       });
-    </script>
-    
+  
+      // Load PDF and render page
+      pdfjsLib.getDocument(url).promise.then((pdf) => {
+        pdfDoc = pdf;
+        return pdf.getPage(1);
+      }).then((page) => {
+        const scale = 1.5;
+        const viewport = page.getViewport({ scale });
+        const context = canvas.getContext("2d");
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+  
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        };
+  
+        page.render(renderContext);
+      });
+  
+      // Click to read PDF aloud
+      canvas.addEventListener("click", function () {
+        if (pdfDoc) {
+          pdfDoc.getPage(1).then(function (page) {
+            page.getTextContent().then(function (textContent) {
+              const strings = textContent.items.map((item) => item.str);
+              const text = strings.join(" ");
+              speak(text);
+            });
+          });
+        }
+      });
+    });
+  </script>
+  
     <script>
       let mediaRecorder;
       let audioChunks = [];
@@ -327,15 +356,17 @@
 
       // Helper to get CSRF token
       function getCSRFToken() {
-        const cookies = document.cookie.split(";");
+        const cookies = document.cookie.split(';');
         for (let cookie of cookies) {
-          if (cookie.trim().startsWith("csrftoken=")) {
-            return cookie.trim().substring("csrftoken=".length);
+          const [name, value] = cookie.trim().split('=');
+          if (name === 'csrftoken') {
+            return decodeURIComponent(value);
           }
         }
-        return "";
+        return '';
       }
     </script>
+      
     <!-- Delete Sound -->
     <audio id="deleteSound" preload="auto">
       <source src="{% static 'audio/delete_loud.mp3' %}" type="audio/mpeg" />
