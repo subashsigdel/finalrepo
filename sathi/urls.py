@@ -3,7 +3,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import (
-    landing,note_list, register_view,save_image,teacher_questions,create_note, register_student,save_image,stop_music, login_view,test,logout_view, login_student_view,save_note_audio,upload_audio, teacher_student_add_view, teacher_notes, ask_view_student, dashboard_view, make_notes_view_student, dashboard_view_student, notes_view_student
+    landing,note_list, register_view,save_image,get_all_questions,create_note, register_student,save_image,stop_music, login_view,test,logout_view, login_student_view,save_note_audio,upload_audio, teacher_student_add_view, teacher_notes, ask_view_student, dashboard_view, make_notes_view_student, dashboard_view_student, notes_view_student
 
 )
 
@@ -25,7 +25,7 @@ urlpatterns = [
     path("register_student/", register_student, name="register_student"),
     path('save_image/', save_image, name='save_image'),
     path('stop-music/', stop_music, name='stop_music'),
-    path('teacher_questions/', teacher_questions, name = 'teacher_questions'),
+    path('teacher_questions/', get_all_questions, name = 'teacher_questions'),
     path('create/', create_note, name='create_note'),
     path('teacher_notes/', note_list, name='teacher_notes'),
     path('save_image/', save_image, name='save_image'),

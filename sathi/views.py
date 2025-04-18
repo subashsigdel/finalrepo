@@ -359,58 +359,42 @@ import time
 from django.shortcuts import render
 from django.http import JsonResponse
 
+import os
+from django.conf import settings
+from django.http import JsonResponse
+
 def notes_view_student(request):
-    file_count, filenmaes = extract_filenames(folder_path="media/notes")
-    context = {'notes': filenmaes}
-    print(context)
+    file_count, filenames = extract_filenames(folder_path="media/notes")
+    context = {'notes': filenames}
 
-    if request.method == 'POST' and request.FILES.get('audio_file'):
-        audio_file = request.FILES['audio_file']
-        tomp3 = None
-        try:
-            # Convert uploaded file to WAV
-            tomp3 = convert_to_wav(audio_file)
-
-            # Transcribe the audio
-            texts = transcribe_audio_file(tomp3)
-
-            # Find what command it matches
-            commands = listen_and_respond_pdf(texts)
-
-            folder_path = "mp3"
-            matching_file = None
-
-            # List all files in folder and match with command
-            for file in os.listdir(folder_path):
-                filename_without_ext = os.path.splitext(file)[0]
-                if filename_without_ext.lower() == commands.lower():
-                    matching_file = os.path.join(folder_path, file)
-                    break
-
-            if matching_file:
-                speak(matching_file)
-                context['success'] = True
-                context['message'] = f'Found and read file: {os.path.basename(matching_file)}'
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        import json
+        data = json.loads(request.body)
+        note_to_delete = data.get('note_name')
+        
+        if note_to_delete:
+            file_path = os.path.join(settings.MEDIA_ROOT, 'notes', note_to_delete)
+            
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                return JsonResponse({
+                    'success': True,
+                    'message': f'{note_to_delete} deleted successfully'
+                })
             else:
-                context['success'] = False
-                context['error'] = 'No matching file found for the command.'
+                return JsonResponse({
+                    'success': False,
+                    'error': 'File not found'
+                })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'No note name provided'
+            })
 
-        except Exception as e:
-            context['success'] = False
-            context['error'] = str(e)
-
-        finally:
-            if tomp3 and os.path.exists(tomp3):
-                time.sleep(5)
-                os.remove(tomp3)
-
-        # After processing, render a template with context
-        return render(request, 'student_notes.html', context)
-
-    # If GET request or no file uploaded
-    context['success'] = False
-    context['error'] = 'No audio file received.'
     return render(request, 'student_notes.html', context)
+
+
 
 @csrf_exempt
 def stop_music(request):
@@ -442,7 +426,6 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 import os
 import time
-
 def ask_view_student(request):
     transcribed_text = None
 
@@ -458,9 +441,21 @@ def ask_view_student(request):
                 transcribed_text = transcribe_audio_file(tomp3)
                 print("done")
 
+                # Prepare title (first 2 words of transcribed text)
+                title_words = transcribed_text.split()[:2]
+                title = ' '.join(title_words) if title_words else 'Untitled'
+
+                # Save to database
+                saved_question = Question.objects.create(
+                    user=request.user,
+                    name=title,
+                    question=transcribed_text
+                )
+                print(f"Saved Question - Title: {saved_question.name}, Question: {saved_question.question}")
+
                 return JsonResponse({
                     'success': True,
-                    'message': 'Audio processed successfully.',
+                    'message': 'Audio processed and saved successfully.',
                     'transcribed_text': transcribed_text
                 })
 
@@ -469,7 +464,6 @@ def ask_view_student(request):
 
             finally:
                 if tomp3 and os.path.exists(tomp3):
-                    time.sleep(5)
                     os.remove(tomp3)
 
         else:
@@ -486,6 +480,7 @@ def ask_view_student(request):
                 return redirect('student_ask')  # redirect back to form page or dashboard
 
     return render(request, 'student_ask.html')
+
 
 
 
@@ -571,8 +566,7 @@ def teacher_notes(request):
         notes = Note.objects.all()
     return render(request, '.html', {'notes': notes, 'query': query})
 
-def teacher_questions(request):
-    return render(request, 'teacher_questions.html')
+
 
 def logout_view(request):
     logout(request)

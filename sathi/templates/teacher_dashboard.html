@@ -1,4 +1,5 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -23,6 +24,16 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
   </head>
   <body class="bg-gray-100">
+    <div id="loader" class="hidden fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 z-50">
+      <div class="flex space-x-1">
+        <div class="w-2 h-8 bg-white animate-bounce"></div>
+        <div class="w-2 h-6 bg-white animate-bounce [animation-delay:-0.1s]"></div>
+        <div class="w-2 h-10 bg-white animate-bounce [animation-delay:-0.2s]"></div>
+        <div class="w-2 h-6 bg-white animate-bounce [animation-delay:-0.1s]"></div>
+        <div class="w-2 h-8 bg-white animate-bounce"></div>
+      </div>
+    </div>
+    
     <div class="flex h-screen">
       <!-- Sidebar -->
       <aside class="w-72 bg-white shadow-md flex flex-col justify-between">
@@ -278,6 +289,44 @@
               }
           });
         </script>
-        
+          </script>
+          <script>
+            function showLoader() {
+                document.getElementById('loader').classList.remove('hidden');
+            }
+            
+            function hideLoader() {
+                document.getElementById('loader').classList.add('hidden');
+            }
+            
+            // Show loader on any link click
+            document.addEventListener('DOMContentLoaded', function() {
+                const links = document.querySelectorAll('a');
+            
+                links.forEach(function(link) {
+                    link.addEventListener('click', function(event) {
+                        const href = link.getAttribute('href');
+                        // Only show loader if it's a real page link
+                        if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
+                            showLoader();
+                        }
+                    });
+                });
+            
+                // Show loader when form is submitted
+                const forms = document.querySelectorAll('form');
+                forms.forEach(function(form) {
+                    form.addEventListener('submit', function() {
+                        showLoader();
+                    });
+                });
+            });
+            
+            // Also hide loader when page fully loads
+            window.onload = function() {
+                hideLoader();
+            };
+            </script>
+            
   </body>
   </html>
