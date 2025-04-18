@@ -103,12 +103,13 @@
         >
           <!-- Delete Button - With added data attribute for note ID -->
           <button
-          class="absolute top-3 right-3 text-red-600 hover:text-red-800 bg-white rounded-full p-2 shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 z-10 speak-on-hover delete-note-btn"
-          data-note-name="{{ note }}"
-          onclick="confirmDelete(this);"
-        >
-          <i class="fas fa-trash-alt text-2xl"></i>
-        </button>
+            class="absolute top-3 right-3 text-red-600 hover:text-red-800 bg-white rounded-full p-2 shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 z-10 speak-on-hover delete-note-btn"
+            data-speak="Delete note titled {{ note.title }}"
+            data-note-name="{{ note }}"
+            onclick="confirmDelete(this);"
+          >
+            <i class="fas fa-trash-alt text-2xl"></i>
+          </button>
 
           <!-- This div now only reads title/subject/date -->
           <div
