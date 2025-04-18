@@ -125,7 +125,7 @@
         <!-- Center Column (Microphone) -->
         <div class="flex items-center justify-center">
           <a
-            title="Give Command"
+            title="Hold Space To Give Command."
             href="#"
             class="text-white w-36 h-36 rounded-full shadow-2xl flex items-center justify-center border-4 border-white z-20 hover:opacity-90 transition-all ease-in-out duration-300 transform hover:scale-110"
             style="
@@ -166,129 +166,122 @@
       <span id="fact-text" class="text-sm leading-snug"></span>
     </div>
 
-    <!-- JavaScript -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const synth = window.speechSynthesis;
-        let voices = [];
+   <!-- JavaScript -->
+   <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const synth = window.speechSynthesis;
+      let voices = [];
 
-        function loadVoices() {
-          voices = synth.getVoices();
+      function loadVoices() {
+        voices = synth.getVoices();
+      }
+
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+      }
+
+      loadVoices();
+
+      function speak(text) {
+        if (!text || synth.speaking) {
+          synth.cancel();
+          return;
         }
 
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-          speechSynthesis.onvoiceschanged = loadVoices;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "en-US";
+
+        const femaleVoice = voices.find(
+          (voice) =>
+            voice.name.includes("Female") ||
+            voice.name.includes("Google US English") ||
+            voice.name.includes("Samantha") ||
+            voice.name.includes("Microsoft Zira")
+        );
+
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
         }
 
-        loadVoices();
+        synth.speak(utterance);
+      }
 
-        function speak(text) {
-          if (!text || synth.speaking) {
-            synth.cancel();
-            return;
-          }
+      // Greet the user on page load
+      const username = "{{ user.name }}";
+      if (username) {
+        speak(`Welcome, ${username}. You can Hold "Space Key" to enter your voice command.`);
+      }
 
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = "en-US";
 
-          const femaleVoice = voices.find(
-            (voice) =>
-              voice.name.includes("Female") ||
-              voice.name.includes("Google US English") ||
-              voice.name.includes("Samantha") ||
-              voice.name.includes("Microsoft Zira")
-          );
+      // Fun facts for General Knowledge
+      const funFacts = [
+        "Did you know? Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3000 years old.",
+        "Octopuses have three hearts, and their blood is blue.",
+        "Bananas are berries, but strawberries are not.",
+        "A day on Venus is longer than a year on Venus.",
+        "The Eiffel Tower can grow more than six inches in summer due to heat expansion.",
+        "Your brain uses around 20 percent of your body's oxygen and calorie intake.",
+        "Sharks are older than trees. They've existed for over 400 million years.",
+        "Sloths can hold their breath longer than dolphins — up to 40 minutes.",
+        "Some turtles can breathe through their butts!",
+        "The first computer mouse was made of wood in 1964.",
+        "There are more transistors in a smartphone than there are people on Earth.",
+        "Email is older than the World Wide Web — it was invented in 1971.",
+        "The first iPhone was released in 2007, but touchscreen phones existed before it.",
+        "Google was originally called 'Backrub'.",
+        "NASA’s Apollo computers had less processing power than a modern calculator.",
+        "The first website ever is still online — created in 1991 by Tim Berners-Lee.",
+        "Over 90% of the world’s currency exists only in digital form.",
+        "You blink less when using a screen — about half as often as normal.",
+        "More people own a mobile phone than a toothbrush.",
+        "Samsung was founded as a grocery store in 1938.",
+        "Typing '=rand(200,99)' in older versions of Microsoft Word used to crash it.",
+        "The first computer bug was an actual moth stuck in a relay.",
+        "The password for the first computer used at MIT was '0'.",
+        "The QWERTY keyboard layout was designed to slow down typing to prevent jams.",
+        "The first YouTube video was uploaded on April 23, 2005 — it's called 'Me at the Zoo'.",
+        "Bluetooth is named after a Viking king, Harald 'Bluetooth' Gormsson.",
+        "The original name for Windows was 'Interface Manager'.",
+        "A single Google search uses more computing power than the entire Apollo 11 mission.",
+        "The word 'robot' comes from a Czech word meaning 'forced labor'.",
+      ];
 
-          if (femaleVoice) {
-            utterance.voice = femaleVoice;
-          }
+      const popup = document.getElementById("fact-popup");
+      const popupText = document.getElementById("fact-text");
 
-          synth.speak(utterance);
-        }
+      document
+        .getElementById("general-knowledge-btn")
+        .addEventListener("click", (e) => {
+          e.preventDefault();
+          if (!synth.speaking) {
+            const randomFact =
+              funFacts[Math.floor(Math.random() * funFacts.length)];
+            speak(randomFact);
 
-        // Greet the user on page load
-        const username = "{{ user.name }}";
-        if (username) {
-          speak(
-            `Welcome, ${username}. You can Hold "Space Key" to enter your voice command.`
-          );
-        }
+            popupText.textContent = randomFact;
+            popup.classList.remove("hidden");
 
-        // Fun facts for General Knowledge
-        const funFacts = [
-          "Did you know? Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3000 years old.",
-          "Octopuses have three hearts, and their blood is blue.",
-          "Bananas are berries, but strawberries are not.",
-          "A day on Venus is longer than a year on Venus.",
-          "The Eiffel Tower can grow more than six inches in summer due to heat expansion.",
-          "Your brain uses around 20 percent of your body's oxygen and calorie intake.",
-          "Sharks are older than trees. They've existed for over 400 million years.",
-          "Sloths can hold their breath longer than dolphins — up to 40 minutes.",
-          "Some turtles can breathe through their butts!",
-          "The first computer mouse was made of wood in 1964.",
-          "There are more transistors in a smartphone than there are people on Earth.",
-          "Email is older than the World Wide Web — it was invented in 1971.",
-          "The first iPhone was released in 2007, but touchscreen phones existed before it.",
-          "Google was originally called 'Backrub'.",
-          "NASA’s Apollo computers had less processing power than a modern calculator.",
-          "The first website ever is still online — created in 1991 by Tim Berners-Lee.",
-          "Over 90% of the world’s currency exists only in digital form.",
-          "You blink less when using a screen — about half as often as normal.",
-          "More people own a mobile phone than a toothbrush.",
-          "Samsung was founded as a grocery store in 1938.",
-          "Typing '=rand(200,99)' in older versions of Microsoft Word produces a random paragraph.",
-        ];
-
-        document
-          .getElementById("general-knowledge-btn")
-          .addEventListener("click", function () {
-            const fact = funFacts[Math.floor(Math.random() * funFacts.length)];
-            document.getElementById("fact-text").innerText = fact;
-            document.getElementById("fact-popup").classList.remove("hidden");
             setTimeout(() => {
-              document.getElementById("fact-popup").classList.add("hidden");
-            }, 5000);
-          });
+              popup.classList.add("hidden");
+            }, 8000); // 8 seconds
+          }
+        });
+
+      // Speak on hover
+      const speakableElements = document.querySelectorAll(
+        "button, a, li, h1, h2, h3, span, p"
+      );
+      speakableElements.forEach((el) => {
+        el.addEventListener("mouseenter", () => {
+          const text =
+            el.innerText.trim() ||
+            el.getAttribute("aria-label") ||
+            el.getAttribute("title");
+          if (text) speak(text);
+        });
+        el.addEventListener("mouseleave", () => synth.cancel());
       });
-    </script>
-          </script>
-          <script>
-            function showLoader() {
-                document.getElementById('loader').classList.remove('hidden');
-            }
-            
-            function hideLoader() {
-                document.getElementById('loader').classList.add('hidden');
-            }
-            
-            // Show loader on any link click
-            document.addEventListener('DOMContentLoaded', function() {
-                const links = document.querySelectorAll('a');
-            
-                links.forEach(function(link) {
-                    link.addEventListener('click', function(event) {
-                        const href = link.getAttribute('href');
-                        // Only show loader if it's a real page link
-                        if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
-                            showLoader();
-                        }
-                    });
-                });
-            
-                // Show loader when form is submitted
-                const forms = document.querySelectorAll('form');
-                forms.forEach(function(form) {
-                    form.addEventListener('submit', function() {
-                        showLoader();
-                    });
-                });
-            });
-            
-            // Also hide loader when page fully loads
-            window.onload = function() {
-                hideLoader();
-            };
-            </script>
-            
-  </body>
+    });
+  </script>
+</body>
 </html>

@@ -245,6 +245,14 @@
 
           synth.speak(utterance);
         }
+        // Greet the user with the heading
+        const heading = document.querySelector("h2");
+        if (heading) {
+          const headingText = heading.innerText.trim();
+          setTimeout(() => {
+            speak("Welcome. Here you can read your " + headingText);
+          }, 500);
+        }
 
         // Set global speak function
         window.speak = speak;
